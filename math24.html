@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>24点游戏</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background-color: #f44336;
+      color: #fff;
+      font-size: 24px;
+      font-weight: bold;
+      width: 60px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px;
+      border-radius: 5px;
+      user-select: none;
+    }
+
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 5px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="cards">
+      <div class="card" id="card1"></div>
+      <div class="card" id="card2"></div>
+      <div class="card" id="card3"></div>
+      <div class="card" id="card4"></div>
+    </div>
+    <div class="input-container">
+      <input type="text" id="expression" placeholder="请输入计算表达式">
+      <button id="submit-btn" disabled>提交</button>
+    </div>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    const cards = document.querySelectorAll('.card');
+    const expressionInput = document.getElementById('expression');
+    const submitBtn = document.getElementById('submit-btn');
+    const resultDiv = document.getElementById('result');
+
+// 生成随机数
+function getRandomNumber(min, max) {
+return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// 初始化卡牌
+function initCards() {
+cards.forEach(card => {
+card.textContent = getRandomNumber(1, 9);
+});
+}
+
+// 检查用户输入的表达式
+function checkExpression(expr) {
+const numbers = Array.from(cards, card => parseInt(card.textContent));
+const inputNumbers = expr.match(/\d+/g).map(num => parseInt(num));
+
+// 检查用户输入的数字是否与卡牌上的数字相匹配
+if (inputNumbers.length !== 4 || !inputNumbers.every(num => numbers.includes(num))) {
+return false;
+}
+
+// 尝试计算表达式的结果，确保表达式是有效的
+try {
+// eslint-disable-next-line no-eval
+const result = eval(expr);
+return result === 24;
+} catch (e) {
+return false;
+}
+}
+
+// 添加事件监听器
+expressionInput.addEventListener('input', () => {
+submitBtn.disabled = expressionInput.value.trim() === '';
+});
+
+submitBtn.addEventListener('click', () => {
+const expression = expressionInput.value;
+const isValid = checkExpression(expression);
+if (isValid) {
+resultDiv.innerHTML = '<span style="color:green">恭喜，答案正确！</span>';
+initCards();
+} else {
+resultDiv.innerHTML = '<span style="color:red">抱歉，答案错误。</span>';
+}
+expressionInput.value = '';
+expressionInput.focus();
+});
+
+// 初始化游戏
+initCards();
+expressionInput.focus();
+</script>
+
+</body>
+</html>
