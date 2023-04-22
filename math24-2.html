@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>24点游戏</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background-color: #f44336;
+      color: #fff;
+      font-size: 24px;
+      font-weight: bold;
+      width: 60px;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 10px;
+      border-radius: 5px;
+      user-select: none;
+    }
+
+    .card span {
+      color: #ffffff;
+    }
+
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 5px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn:hover:not(:disabled) {
+      background-color: #45a049;
+    }
+
+    .btn:active:not(:disabled) {
+      background-color: #3e8e41;
+    }
+
+    .result {
+      margin-top: 20px;
+    }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="scoreboard">
+        <div>总局数：<span id="total-games">0</span></div>
+        <div>赢的局数：<span id="won-games">0</span></div>
+      </div>
+      <div class="cards">
+        <div class="card" id="card1"></div>
+        <div class="card" id="card2"></div>
+        <div class="card" id="card3"></div>
+        <div class="card" id="card4"></div>
+      </div>
+      <div class="input-container">
+        <input type="text" id="expression" placeholder="计算表达式" readonly>
+        <div class="buttons" id="number-buttons"></div>
+        <div class="buttons">
+          <button class="btn" id="add">+</button>
+          <button class="btn" id="subtract">-</button>
+          <button class="btn" id="multiply">✖️</button>
+          <button class="btn" id="divide">➗</button>
+          <button class="btn" id="delete">删除</button>
+          <button class="btn" id="left-parenthesis">(</button>
+          <button class="btn" id="right-parenthesis">)</button>
+        </div>
+        <div class="buttons">
+          <button class="btn" id="submit-btn" disabled>提交</button>
+          <button class="btn" id="give-up-btn">放弃</button>
+          <button class="btn" id="no-solution-btn">无解</button>
+        </div>
+      </div>
+        <div class="result" id="result"></div>
+    </div>
+     </body>
+    <script>
+    const cards = document.querySelectorAll('.card');
+    const expressionInput = document.getElementById('expression');
+    const submitBtn = document.getElementById('submit-btn');
+    const giveUpBtn = document.getElementById('give-up-btn');
+    const totalGames = document.getElementById('total-games');
+    const wonGames = document.getElementById('won-games');
+    const resultDiv = document.getElementById('result');
+    const numberButtons = document.getElementById('number-buttons');
+
+    // 修改操作符为 ÷ 和 ×
+      ['add', 'subtract', 'multiply', 'divide', 'delete'].forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        if (btnId === 'delete') {
+          btn.addEventListener('click', () => {
+            expressionInput.value = expressionInput.value.slice(0, -1);
+          });
+        } else if (btnId === 'multiply') {
+          btn.textContent = '×';
+          btn.addEventListener('click', () => {
+            expressionInput.value += btn.textContent;
+          });
+        } else if (btnId === 'divide') {
+          btn.textContent = '÷';
+          btn.addEventListener('click', () => {
+            expressionInput.value += btn.textContent;
+          });
+        } else {
+          btn.addEventListener('click', () => {
+            expressionInput.value += btn.textContent;
+          });
+        }
+        submitBtn.disabled = expressionInput.value.trim() === '';
+      });
+
+
+    function getRandomNumber(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function initCards() {
+      cards.forEach(card => {
+        card.textContent = getRandomNumber(1, 13);
+      });
+      initNumberButtons();
+      totalGames.textContent = parseInt(totalGames.textContent) + 1;
+      expressionInput.value = '';
+      submitBtn.disabled = true;
+    }
+
+    function initNumberButtons() {
+      numberButtons.innerHTML = '';
+      Array.from(cards).forEach((card, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.id = `num${index + 1}-${card.textContent}`; // 在 id 中包含数字值
+        btn.textContent = card.textContent;
+        btn.used = false;
+        btn.addEventListener('click', () => {
+          if (!btn.used) {
+            expressionInput.value += btn.textContent;
+            submitBtn.disabled = expressionInput.value.trim() === '';
+            btn.used = true;
+            btn.disabled = true;
+          }
+        });
+        numberButtons.appendChild(btn);
+      });
+    }
+
+    // 添加左括号和右括号按钮
+      const leftParenthesisBtn = document.getElementById('left-parenthesis');
+      leftParenthesisBtn.addEventListener('click', () => {
+        expressionInput.value += leftParenthesisBtn.textContent;
+        submitBtn.disabled = expressionInput.value.trim() === '';
+      });
+
+      const rightParenthesisBtn = document.getElementById('right-parenthesis');
+      rightParenthesisBtn.addEventListener('click', () => {
+        expressionInput.value += rightParenthesisBtn.textContent;
+        submitBtn.disabled = expressionInput.value.trim() === '';
+      });
+
+
+    function checkExpression(expr) {
+      const numbers = Array.from(cards, card => parseInt(card.textContent));
+      const inputNumbers = expr.match(/\d+/g).map(num => parseInt(num));
+
+      if (inputNumbers.length !== 4 || !inputNumbers.every(num => {
+        const index = numbers.indexOf(num);
+        if (index === -1) {
+          return false;
+        }
+        numbers.splice(index, 1);
+        return true;
+      })) {
+        return false;
+      }
+
+      try {
+          const result = eval(expr.replace('×', '*').replace('÷', '/'));
+          return Math.abs(result - 24) < 1e-6;
+        } catch (error) {
+          return false;
+        }
+      }
+
+    function resetNumberButtons() {
+      Array.from(numberButtons.children).forEach(btn => {
+        btn.used = false;
+        btn.disabled = false;
+      });
+    }
+
+    submitBtn.addEventListener('click', () => {
+      const expression = expressionInput.value;
+      const isValid = checkExpression(expression);
+      if (isValid) {
+        resultDiv.innerHTML = '<span style="color:green">恭喜，答案正确！</span>';
+        wonGames.textContent = parseInt(wonGames.textContent) + 1;
+        initCards();
+      } else {
+        resultDiv.innerHTML = '<span style="color:red">抱歉，答案错误。</span>';
+        resetNumberButtons(); // 重置数字按钮的 used 属性
+      }
+      expressionInput.value = '';
+      submitBtn.disabled = true;
+      resetNumberButtons();
+    });
+
+    giveUpBtn.addEventListener('click', () => {
+      const numbers = Array.from(cards, card => parseInt(card.textContent));
+      const result = findSolution(numbers);
+      if (result) {
+        resultDiv.innerHTML = `<span style="color:blue">正确答案：${result}</span>`;
+      } else {
+        resultDiv.innerHTML = '<span style="color:blue">无解</span>';
+      }
+      initCards();
+    });
+
+    function findSolution(numbers) {
+      const ops = ['+', '-', '×', '÷'];
+      const len = ops.length;
+
+      function permute(arr) {
+        if (arr.length === 1) return [arr];
+        let result = [];
+        for (let i = 0; i < arr.length; i++) {
+          const currentNum = arr.splice(i, 1);
+          const remainingNums = arr.slice();
+          const remainingPermutations = permute(remainingNums);
+          for (let j = 0; j < remainingPermutations.length; j++) {
+            const perm = [currentNum, ...remainingPermutations[j]];
+            result.push(perm);
+          }
+          arr.splice(i, 0, currentNum);
+        }
+        return result;
+      }
+
+      const numPermutations = permute(numbers);
+
+      for (let p = 0; p < numPermutations.length; p++) {
+        const perm = numPermutations[p];
+        for (let a = 0; a < len; a++) {
+          for (let b = 0; b < len; b++) {
+            for (let c = 0; c < len; c++) {
+              const expr = `${perm[0]}${ops[a]}${perm[1]}${ops[b]}${perm[2]}${ops[c]}${perm[3]}`;
+              if (checkExpression(expr)) {
+                return expr;
+              }
+            }
+          }
+        }
+      }
+
+      return null;
+    }
+
+
+    const deleteBtn = document.getElementById('delete');
+    deleteBtn.addEventListener('click', () => {
+      const lastChar = expressionInput.value.slice(-1);
+      expressionInput.value = expressionInput.value.slice(0, -1);
+      const lastClickedNumberBtn = Array.from(numberButtons.children).find(
+        (btn) => btn.textContent === lastChar && btn.disabled
+      );
+      if (lastClickedNumberBtn) {
+        lastClickedNumberBtn.disabled = false;
+        lastClickedNumberBtn.used = false;
+      }
+      submitBtn.disabled = expressionInput.value.trim() === '';
+    });
+
+    // 添加一个无解按钮
+      const noSolutionBtn = document.getElementById('no-solution-btn');
+      noSolutionBtn.addEventListener('click', () => {
+        const numbers = Array.from(cards, card => parseInt(card.textContent));
+        const result = findSolution(numbers);
+        if (!result) {
+          resultDiv.innerHTML = '<span style="color:green">恭喜，本题无解！</span>';
+          setTimeout(() => {
+            initCards();
+          }, 1500); // 延迟 1500 毫秒（1.5 秒）刷新题目
+        } else {
+          resultDiv.innerHTML = '<span style="color:red">本题有解，请继续尝试。</span>';
+        }
+      });
+
+    // 初始化游戏
+    initCards();
+    </script>
+</html>
