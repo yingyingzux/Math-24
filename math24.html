@@ -56,6 +56,10 @@
       user-select: none;
     }
 
+    .card span {
+      color: #ffffff;
+    }
+
     .input-container {
       display: flex;
       flex-direction: column;
@@ -98,153 +102,166 @@
       cursor: not-allowed;
     }
 
+    .btn:hover:not(:disabled) {
+      background-color: #45a049;
+    }
+
+    .btn:active:not(:disabled) {
+      background-color: #3e8e41;
+    }
+
     .result {
       margin-top: 20px;
     }
   </style>
-</head>
-<body>
-  <div class="container">
-    <div class="scoreboard">
-      <div>局数: <span id="total-games">0</span></div>
-      <div>胜利局数: <span id="won-games">0</span></div>
-    </div>
-   
-    <div class="cards">
-          <div class="card" id="card1"></div>
-          <div class="card" id="card2"></div>
-          <div class="card" id="card3"></div>
-          <div class="card" id="card4"></div>
-        </div>
-        <div class="input-container">
-          <input type="text" id="expression" placeholder="计算表达式" readonly>
-          <div class="buttons">
-            <button class="btn" id="num1">1</button>
-            <button class="btn" id="num2">2</button>
-            <button class="btn" id="num3">3</button>
-            <button class="btn" id="num4">4</button>
-            <button class="btn" id="num5">5</button>
-            <button class="btn" id="num6">6</button>
-            <button class="btn" id="num7">7</button>
-            <button class="btn" id="num8">8</button>
-            <button class="btn" id="num9">9</button>
-            <button class="btn" id="add">+</button>
-            <button class="btn" id="subtract">-</button>
-            <button class="btn" id="multiply">*</button>
-            <button class="btn" id="divide">/</button>
-            <button class="btn" id="delete">删除</button>
-          </div>
-          <div class="buttons">
-            <button class="btn" id="submit-btn" disabled>提交</button>
-            <button class="btn" id="give-up-btn">放弃</button>
-          </div>
-        </div>
-        <div class="result" id="result"></div>
+  </head>
+  <body>
+    <div class="container">
+      <div class="scoreboard">
+        <div>总局数：<span id="total-games">0</span></div>
+        <div>赢的局数：<span id="won-games">0</span></div>
       </div>
+      <div class="cards">
+        <div class="card" id="card1"></div>
+        <div class="card" id="card2"></div>
+        <div class="card" id="card3"></div>
+        <div class="card" id="card4"></div>
+      </div>
+      <div class="input-container">
+        <input type="text" id="expression" placeholder="计算表达式" readonly>
+        <div class="buttons" id="number-buttons"></div>
+        <div class="buttons">
+          <button class="btn" id="add">+</button>
+          <button class="btn" id="subtract">-</button>
+          <button class="btn" id="multiply">✖️</button>
+          <button class="btn" id="divide">➗</button>
+          <button class="btn" id="delete">删除</button>
+        </div>
+        <div class="buttons">
+          <button class="btn" id="submit-btn" disabled>提交</button>
+          <button class="btn" id="give-up-btn">放弃</button>
+        </div>
+      </div>
+      <div class="result" id="result"></div>
+    </div>
+     </body>
+    <script>
+    const cards = document.querySelectorAll('.card');
+    const expressionInput = document.getElementById('expression');
+    const submitBtn = document.getElementById('submit-btn');
+    const giveUpBtn = document.getElementById('give-up-btn');
+    const totalGames = document.getElementById('total-games');
+    const wonGames = document.getElementById('won-games');
+    const resultDiv = document.getElementById('result');
+    const numberButtons = document.getElementById('number-buttons');
 
-      <script>
-        const cards = document.querySelectorAll('.card');
-        const expressionInput = document.getElementById('expression');
-        const submitBtn = document.getElementById('submit-btn');
-        const giveUpBtn = document.getElementById('give-up-btn');
-        const totalGames = document.getElementById('total-games');
-        const wonGames = document.getElementById('won-games');
-        const resultDiv = document.getElementById('result');
-        const btns = document.querySelectorAll('.btn');
+    function getRandomNumber(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-        // 生成随机数
-        function getRandomNumber(min, max) {
-          return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
+    function initCards() {
+      cards.forEach(card => {
+        card.textContent = getRandomNumber(1, 13);
+      });
+      initNumberButtons();
+      totalGames.textContent = parseInt(totalGames.textContent) + 1;
+      expressionInput.value = '';
+      submitBtn.disabled = true;
+    }
 
-        // 初始化卡牌
-        function initCards() {
-          cards.forEach(card => {
-            card.textContent = getRandomNumber(1, 9);
-          });
-          totalGames.textContent = parseInt(totalGames.textContent) + 1;
-          expressionInput.value = '';
-          submitBtn.disabled = true;
-        }
-
-        // 检查用户输入的表达式
-        function checkExpression(expr) {
-          const numbers = Array.from(cards, card => parseInt(card.textContent));
-          const inputNumbers = expr.match(/\d+/g).map(num => parseInt(num));
-
-          // 检查用户输入的数字是否与卡牌上的数字相匹配
-          if (inputNumbers.length !== 4 || !inputNumbers.every(num => numbers.includes(num))) {
-            return false;
-          }
-
-          // 尝试计算表达式的结果，确保表达式是有效的
-          try {
-            // eslint-disable-next-line no-eval
-            const result = eval(expr);
-            return result === 24;
-          } catch (e) {
-            return false;
-          }
-        }
-
-        // 添加按钮事件监听器
-        btns.forEach(btn => {
-          btn.addEventListener('click', () => {
-          if (btn.id === 'delete') {
-          expressionInput.value = expressionInput.value.slice(0, -1);
-          } else {
+    function initNumberButtons() {
+      numberButtons.innerHTML = '';
+      Array.from(cards).forEach((card, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.id = `num${index + 1}`;
+        btn.textContent = card.textContent;
+        btn.addEventListener('click', () => {
           expressionInput.value += btn.textContent;
-          }
           submitBtn.disabled = expressionInput.value.trim() === '';
-          });
         });
+        numberButtons.appendChild(btn);
+      });
+    }
 
-        // 提交按钮事件监听器
-submitBtn.addEventListener('click', () => {
-  const expression = expressionInput.value;
-  const isValid = checkExpression(expression);
-  if (isValid) {
-    resultDiv.innerHTML = '<span style="color:green">恭喜，答案正确！</span>';
-    wonGames.textContent = parseInt(wonGames.textContent) + 1;
-    initCards();
-  } else {
-    resultDiv.innerHTML = '<span style="color:red">抱歉，答案错误。</span>';
-  }
-});
+    function checkExpression(expr) {
+      const numbers = Array.from(cards, card => parseInt(card.textContent));
+      const inputNumbers = expr.match(/\d+/g).map(num => parseInt(num));
 
-// 放弃按钮事件监听器
-giveUpBtn.addEventListener('click', () => {
-  const numbers = Array.from(cards, card => parseInt(card.textContent));
-  const result = findSolution(numbers);
-  if (result) {
-    resultDiv.innerHTML = `<span style="color:blue">正确答案：${result}</span>`;
-  } else {
-    resultDiv.innerHTML = '<span style="color:blue">无解</span>';
-  }
-  initCards();
-});
-
-// 寻找24点解决方案
-function findSolution(numbers) {
-  const ops = ['+', '-', '*', '/'];
-  const len = ops.length;
-
-  for (let a = 0; a < len; a++) {
-    for (let b = 0; b < len; b++) {
-      for (let c = 0; c < len; c++) {
-        const expr = `${numbers[0]}${ops[a]}${numbers[1]}${ops[b]}${numbers[2]}${ops[c]}${numbers[3]}`;
-        if (checkExpression(expr)) {
-          return expr;
+      if (inputNumbers.length !== 4 || !inputNumbers.every(num => {
+        const index = numbers.indexOf(num);
+        if (index === -1) {
+          return false;
         }
+        numbers.splice(index, 1);
+        return true;
+      })) {
+        return false;
+      }
+
+      try {
+        const result = eval(expr.replace('✖️', '*').replace('➗', '/'));
+        return Math.abs(result - 24) < 1e-6;
+      } catch (error) {
+        return false;
       }
     }
-  }
 
-  return null;
-}
+    ['add', 'subtract', 'multiply', 'divide', 'delete'].forEach(btnId => {
+      const btn = document.getElementById(btnId);
+      btn.addEventListener('click', () => {
+        if (btnId === 'delete') {
+          expressionInput.value = expressionInput.value.slice(0, -1);
+        } else {
+          expressionInput.value += btn.textContent;
+        }
+        submitBtn.disabled = expressionInput.value.trim() === '';
+      });
+    });
 
-// 初始化游戏
-initCards();
-</script>
-</body>
+    submitBtn.addEventListener('click', () => {
+      const expression = expressionInput.value;
+      const isValid = checkExpression(expression);
+      if (isValid) {
+        resultDiv.innerHTML = '<span style="color:green">恭喜，答案正确！</span>';
+        wonGames.textContent = parseInt(wonGames.textContent) + 1;
+        initCards();
+      } else {
+        resultDiv.innerHTML = '<span style="color:red">抱歉，答案错误。</span>';
+      }
+      expressionInput.value = '';
+    });
+
+    giveUpBtn.addEventListener('click', () => {
+      const numbers = Array.from(cards, card => parseInt(card.textContent));
+      const result = findSolution(numbers);
+      if (result) {
+        resultDiv.innerHTML = `<span style="color:blue">正确答案：${result}</span>`;
+      } else {
+        resultDiv.innerHTML = '<span style="color:blue">无解</span>';
+      }
+      initCards();
+    });
+
+    function findSolution(numbers) {
+      const ops = ['+', '-', '✖️', '➗'];
+      const len = ops.length;
+
+      for (let a = 0; a < len; a++) {
+        for (let b = 0; b < len; b++) {
+          for (let c = 0; c < len; c++) {
+            const expr = `${numbers[0]}${ops[a]}${numbers[1]}${ops[b]}${numbers[2]}${ops[c]}${numbers[3]}`;
+            if (checkExpression(expr)) {
+              return expr;
+            }
+          }
+        }
+      }
+
+      return null;
+    }
+
+    // 初始化游戏
+    initCards();
+    </script>
 </html>
