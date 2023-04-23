@@ -160,28 +160,37 @@
 
     // 修改操作符为 ÷ 和 ×
       ['add', 'subtract', 'multiply', 'divide', 'delete'].forEach(btnId => {
-        const btn = document.getElementById(btnId);
-        if (btnId === 'delete') {
-          btn.addEventListener('click', () => {
-            expressionInput.value = expressionInput.value.slice(0, -1);
-          });
-        } else if (btnId === 'multiply') {
-          btn.textContent = '×';
-          btn.addEventListener('click', () => {
-            expressionInput.value += btn.textContent;
-          });
-        } else if (btnId === 'divide') {
-          btn.textContent = '÷';
-          btn.addEventListener('click', () => {
-            expressionInput.value += btn.textContent;
-          });
-        } else {
-          btn.addEventListener('click', () => {
-            expressionInput.value += btn.textContent;
-          });
+    const btn = document.getElementById(btnId);
+    if (btnId === 'delete') {
+      btn.addEventListener('click', () => {
+        const lastChar = expressionInput.value.slice(-1);
+        expressionInput.value = expressionInput.value.slice(0, -1);
+
+        if (!isNaN(parseInt(lastChar))) {
+          const lastUsedButton = Array.from(numberButtons.children).find(btn => btn.textContent === lastChar && btn.used === true);
+          if (lastUsedButton) {
+            lastUsedButton.used = false;
+            lastUsedButton.disabled = false;
+          }
         }
         submitBtn.disabled = expressionInput.value.trim() === '';
       });
+    } else if (btnId === 'multiply') {
+      btn.textContent = '×';
+      btn.addEventListener('click', () => {
+        expressionInput.value += btn.textContent;
+      });
+    } else if (btnId === 'divide') {
+      btn.textContent = '÷';
+      btn.addEventListener('click', () => {
+        expressionInput.value += btn.textContent;
+      });
+    } else {
+      btn.addEventListener('click', () => {
+        expressionInput.value += btn.textContent;
+      });
+    }
+  });
 
 
     function getRandomNumber(min, max) {
@@ -204,14 +213,15 @@
         const btn = document.createElement('button');
         btn.className = 'btn';
         btn.id = `num${index + 1}-${card.textContent}`; // 在 id 中包含数字值
+        btn.dataset.num = `num${card.textContent}`; // 添加自定义属性 data-num
         btn.textContent = card.textContent;
         btn.used = false;
         btn.addEventListener('click', () => {
           if (!btn.used) {
             expressionInput.value += btn.textContent;
-            submitBtn.disabled = expressionInput.value.trim() === '';
             btn.used = true;
             btn.disabled = true;
+            submitBtn.disabled = expressionInput.value.trim() === '';
           }
         });
         numberButtons.appendChild(btn);
@@ -219,24 +229,22 @@
     }
 
     // 添加左括号和右括号按钮
-      const leftParenthesisBtn = document.getElementById('left-parenthesis');
-      leftParenthesisBtn.addEventListener('click', () => {
-        expressionInput.value += leftParenthesisBtn.textContent;
-        submitBtn.disabled = expressionInput.value.trim() === '';
-      });
+     const leftParenthesisBtn = document.getElementById('left-parenthesis');
+    leftParenthesisBtn.addEventListener('click', () => {
+      expressionInput.value += leftParenthesisBtn.textContent;
+    });
 
-      const rightParenthesisBtn = document.getElementById('right-parenthesis');
-      rightParenthesisBtn.addEventListener('click', () => {
-        expressionInput.value += rightParenthesisBtn.textContent;
-        submitBtn.disabled = expressionInput.value.trim() === '';
-      });
+    const rightParenthesisBtn = document.getElementById('right-parenthesis');
+    rightParenthesisBtn.addEventListener('click', () => {
+      expressionInput.value += rightParenthesisBtn.textContent;
+    });
 
 
     function checkExpression(expr) {
-      const numbers = Array.from(cards, card => parseInt(card.textContent));
-      const inputNumbers = expr.match(/\d+/g).map(num => parseInt(num));
+      const numbers = Array.from(cards, (card) => parseInt(card.textContent));
+      const inputNumbers = expr.match(/\d+/g).map((num) => parseInt(num));
 
-      if (inputNumbers.length !== 4 || !inputNumbers.every(num => {
+      if (inputNumbers.length !== 4 || !inputNumbers.every((num) => {
         const index = numbers.indexOf(num);
         if (index === -1) {
           return false;
@@ -248,12 +256,13 @@
       }
 
       try {
-          const result = eval(expr.replace('×', '*').replace('÷', '/'));
-          return Math.abs(result - 24) < 1e-6;
-        } catch (error) {
-          return false;
-        }
+        const sanitizedExpr = expr.replace(/×/g, "*").replace(/÷/g, "/");
+        const result = eval(sanitizedExpr);
+        return Math.abs(result - 24) < 1e-6;
+      } catch (error) {
+        return false;
       }
+    }
 
     function resetNumberButtons() {
       Array.from(numberButtons.children).forEach(btn => {
@@ -329,16 +338,18 @@
     }
 
 
+    // 删除按钮修改
     const deleteBtn = document.getElementById('delete');
     deleteBtn.addEventListener('click', () => {
       const lastChar = expressionInput.value.slice(-1);
       expressionInput.value = expressionInput.value.slice(0, -1);
-      const lastClickedNumberBtn = Array.from(numberButtons.children).find(
-        (btn) => btn.textContent === lastChar && btn.disabled
-      );
-      if (lastClickedNumberBtn) {
-        lastClickedNumberBtn.disabled = false;
-        lastClickedNumberBtn.used = false;
+
+      if (!isNaN(parseInt(lastChar))) {
+        const lastUsedButton = Array.from(numberButtons.children).find(btn => btn.textContent === lastChar && btn.used === true);
+        if (lastUsedButton) {
+          lastUsedButton.used = false;
+          lastUsedButton.disabled = false;
+        }
       }
       submitBtn.disabled = expressionInput.value.trim() === '';
     });
