@@ -361,9 +361,19 @@
         for (let a = 0; a < len; a++) {
           for (let b = 0; b < len; b++) {
             for (let c = 0; c < len; c++) {
-              const expr = `${perm[0]}${ops[a]}${perm[1]}${ops[b]}${perm[2]}${ops[c]}${perm[3]}`;
-              if (checkExpression(expr)) {
-                return expr;
+              const expr1 = `${perm[0]}${ops[a]}${perm[1]}${ops[b]}${perm[2]}${ops[c]}${perm[3]}`;
+              const expr2 = `(${perm[0]}${ops[a]}${perm[1]})${ops[b]}(${perm[2]}${ops[c]}${perm[3]})`;
+              const expr3 = `(${perm[0]}${ops[a]}${perm[1]}${ops[b]}${perm[2]})${ops[c]}${perm[3]}`;
+              const expr4 = `${perm[0]}${ops[a]}(${perm[1]}${ops[b]}${perm[2]}${ops[c]}${perm[3]})`;
+
+              if (checkExpression(expr1)) {
+                return expr1;
+              } else if (checkExpression(expr2)) {
+                return expr2;
+              } else if (checkExpression(expr3)) {
+                return expr3;
+              } else if (checkExpression(expr4)) {
+                return expr4;
               }
             }
           }
@@ -372,7 +382,6 @@
 
       return null;
     }
-
 
     // 删除按钮修改
     const deleteBtn = document.getElementById('delete');
@@ -406,14 +415,14 @@
           stopTimer();
           resultDiv.innerHTML = '<span style="color:green">恭喜，本题确实无解！</span>';
           wonGames.textContent = parseInt(wonGames.textContent) + 1;
-          setTimeout(() => {
-            initCards();
-          }, 1500); // 延迟 1500 毫秒（1.5 秒）刷新题目
         } else {
           resultDiv.innerHTML = '<span style="color:red">本题有解，请继续尝试。</span>';
         }
-        expressionDiv.innerHTML = ''; // 清空计算式
-        expressionArray.length = 0; // 清空 expressionArray
+        setTimeout(() => {
+          initCards();
+          expressionDiv.innerHTML = ''; // 清空计算式
+          expressionArray.length = 0; // 清空 expressionArray
+        }, 1500); // 延迟 1500 毫秒（1.5 秒）刷新题目
       });
 
       let timer;
