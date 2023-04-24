@@ -415,15 +415,15 @@
           stopTimer();
           resultDiv.innerHTML = '<span style="color:green">恭喜，本题确实无解！</span>';
           wonGames.textContent = parseInt(wonGames.textContent) + 1;
+          setTimeout(() => {
+            initCards();
+            expressionDiv.innerHTML = ''; // 清空计算式
+            expressionArray.length = 0; // 清空 expressionArray
+          }, 1500); // 延迟 1500 毫秒（1.5 秒）刷新题目
         } else {
           resultDiv.innerHTML = '<span style="color:red">本题有解，请继续尝试。</span>';
         }
-        setTimeout(() => {
-          initCards();
-          expressionDiv.innerHTML = ''; // 清空计算式
-          expressionArray.length = 0; // 清空 expressionArray
-        }, 1500); // 延迟 1500 毫秒（1.5 秒）刷新题目
-      });
+});
 
       let timer;
       let timeLeft;
