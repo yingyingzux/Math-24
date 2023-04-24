@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>24点游戏</title>
   <style>
     body {
@@ -42,8 +42,9 @@
     }
 
     .card {
-      background-color: #f44336;
-      color: #fff;
+      background-color: #ffffff;
+      color: #000;
+      border: solid 1px #000;
       font-size: 24px;
       font-weight: bold;
       width: 60px;
@@ -67,13 +68,29 @@
       width: 100%;
     }
 
-    input[type="text"] {
+    /* 新增expression样式 */
+    .expression {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
       width: 100%;
       padding: 5px;
       font-size: 16px;
       margin-bottom: 10px;
       border: 1px solid #ccc;
       border-radius: 3px;
+      min-height: 34px;
+    }
+
+    .expression-item {
+      background-color: #f5f5f5;
+      padding: 5px 10px;
+      border-radius: 3px;
+      margin: 2px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .buttons {
@@ -121,6 +138,7 @@
         <div>总局数：<span id="total-games">0</span></div>
         <div>赢的局数：<span id="won-games">0</span></div>
       </div>
+      <p>剩余时间: <span id="time-left">60</span> 秒</p>
       <div class="cards">
         <div class="card" id="card1"></div>
         <div class="card" id="card2"></div>
@@ -128,16 +146,16 @@
         <div class="card" id="card4"></div>
       </div>
       <div class="input-container">
-        <input type="text" id="expression" placeholder="计算表达式" readonly>
+        <div class="expression" id="expression"></div>
         <div class="buttons" id="number-buttons"></div>
         <div class="buttons">
           <button class="btn" id="add">+</button>
           <button class="btn" id="subtract">-</button>
           <button class="btn" id="multiply">✖️</button>
           <button class="btn" id="divide">➗</button>
-          <button class="btn" id="delete">删除</button>
           <button class="btn" id="left-parenthesis">(</button>
           <button class="btn" id="right-parenthesis">)</button>
+          <button class="btn" id="delete">删除</button>
         </div>
         <div class="buttons">
           <button class="btn" id="submit-btn" disabled>提交</button>
@@ -150,7 +168,7 @@
      </body>
     <script>
     const cards = document.querySelectorAll('.card');
-    const expressionInput = document.getElementById('expression');
+    const expressionDiv = document.getElementById('expression');
     const submitBtn = document.getElementById('submit-btn');
     const giveUpBtn = document.getElementById('give-up-btn');
     const totalGames = document.getElementById('total-games');
@@ -159,39 +177,43 @@
     const numberButtons = document.getElementById('number-buttons');
 
     // 修改操作符为 ÷ 和 ×
-      ['add', 'subtract', 'multiply', 'divide', 'delete'].forEach(btnId => {
-    const btn = document.getElementById(btnId);
-    if (btnId === 'delete') {
-      btn.addEventListener('click', () => {
-        const lastChar = expressionInput.value.slice(-1);
-        expressionInput.value = expressionInput.value.slice(0, -1);
+    ['add', 'subtract', 'multiply', 'divide', 'delete'].forEach(btnId => {
+      const btn = document.getElementById(btnId);
+      if (btnId === 'delete') {
+        // ...
+      } else if (btnId === 'multiply') {
+        btn.textContent = '×';
+        btn.addEventListener('click', () => {
+          appendExpressionItem(btn.textContent); // 使用 appendExpressionItem 添加符号
+          submitBtn.disabled = !isExpressionValid();
+        });
+      } else if (btnId === 'divide') {
+        btn.textContent = '÷';
+        btn.addEventListener('click', () => {
+          appendExpressionItem(btn.textContent); // 使用 appendExpressionItem 添加符号
+          submitBtn.disabled = !isExpressionValid();
+        });
+      } else {
+        btn.addEventListener('click', () => {
+          appendExpressionItem(btn.textContent); // 使用 appendExpressionItem 添加符号
+          submitBtn.disabled = !isExpressionValid();
+        });
+      }
+    });
 
-        if (!isNaN(parseInt(lastChar))) {
-          const lastUsedButton = Array.from(numberButtons.children).find(btn => btn.textContent === lastChar && btn.used === true);
-          if (lastUsedButton) {
-            lastUsedButton.used = false;
-            lastUsedButton.disabled = false;
-          }
-        }
-        submitBtn.disabled = expressionInput.value.trim() === '';
-      });
-    } else if (btnId === 'multiply') {
-      btn.textContent = '×';
-      btn.addEventListener('click', () => {
-        expressionInput.value += btn.textContent;
-      });
-    } else if (btnId === 'divide') {
-      btn.textContent = '÷';
-      btn.addEventListener('click', () => {
-        expressionInput.value += btn.textContent;
-      });
-    } else {
-      btn.addEventListener('click', () => {
-        expressionInput.value += btn.textContent;
-      });
+
+    const expressionArray = []; // 在全局变量中添加 expressionArray
+
+    function appendExpressionItem(content) {
+      const div = document.createElement('div');
+      div.className = 'expression-item';
+      div.textContent = content;
+      expressionDiv.appendChild(div);
+      expressionArray.push(content); // 更新 expressionArray
+      if (!isNaN(parseInt(content))) { // 如果内容是数字，添加 .digit 类
+        div.classList.add('digit');
+      }
     }
-  });
-
 
     function getRandomNumber(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -203,8 +225,9 @@
       });
       initNumberButtons();
       totalGames.textContent = parseInt(totalGames.textContent) + 1;
-      expressionInput.value = '';
+      expressionDiv.value = '';
       submitBtn.disabled = true;
+      startTimer();
     }
 
     function initNumberButtons() {
@@ -218,26 +241,35 @@
         btn.used = false;
         btn.addEventListener('click', () => {
           if (!btn.used) {
-            expressionInput.value += btn.textContent;
+            appendExpressionItem(btn.textContent);
             btn.used = true;
             btn.disabled = true;
-            submitBtn.disabled = expressionInput.value.trim() === '';
+            submitBtn.disabled = !isExpressionValid();
           }
         });
         numberButtons.appendChild(btn);
       });
     }
 
-    // 添加左括号和右括号按钮
-     const leftParenthesisBtn = document.getElementById('left-parenthesis');
+    const leftParenthesisBtn = document.getElementById('left-parenthesis');
     leftParenthesisBtn.addEventListener('click', () => {
-      expressionInput.value += leftParenthesisBtn.textContent;
+      appendExpressionItem(leftParenthesisBtn.textContent); // 使用 appendExpressionItem 添加符号
+      submitBtn.disabled = !isExpressionValid();
     });
 
     const rightParenthesisBtn = document.getElementById('right-parenthesis');
     rightParenthesisBtn.addEventListener('click', () => {
-      expressionInput.value += rightParenthesisBtn.textContent;
+      appendExpressionItem(rightParenthesisBtn.textContent); // 使用 appendExpressionItem 添加符号
+      submitBtn.disabled = !isExpressionValid();
     });
+
+    function isExpressionValid() {
+      const numDigits = expressionDiv.querySelectorAll(".digit").length;
+      const numOperators = expressionDiv.querySelectorAll(".operator").length;
+      const numParentheses = expressionDiv.querySelectorAll(".parenthesis").length;
+
+      return numDigits === 4;
+    }
 
 
     function checkExpression(expr) {
@@ -264,6 +296,7 @@
       }
     }
 
+
     function resetNumberButtons() {
       Array.from(numberButtons.children).forEach(btn => {
         btn.used = false;
@@ -272,9 +305,9 @@
     }
 
     submitBtn.addEventListener('click', () => {
-      const expression = expressionInput.value;
-      const isValid = checkExpression(expression);
-      if (isValid) {
+      const expression = expressionArray.join('');
+      if (checkExpression(expression)) {
+        stopTimer();
         resultDiv.innerHTML = '<span style="color:green">恭喜，答案正确！</span>';
         wonGames.textContent = parseInt(wonGames.textContent) + 1;
         initCards();
@@ -282,7 +315,8 @@
         resultDiv.innerHTML = '<span style="color:red">抱歉，答案错误。</span>';
         resetNumberButtons(); // 重置数字按钮的 used 属性
       }
-      expressionInput.value = '';
+      expressionDiv.innerHTML = ''; // 在这里清空 expressionDiv
+      expressionArray.length = 0; // 清空 expressionArray
       submitBtn.disabled = true;
       resetNumberButtons();
     });
@@ -296,6 +330,8 @@
         resultDiv.innerHTML = '<span style="color:blue">无解</span>';
       }
       initCards();
+      expressionDiv.innerHTML = ''; // 清空计算式
+      expressionArray.length = 0; // 清空 expressionArray
     });
 
     function findSolution(numbers) {
@@ -340,19 +376,26 @@
 
     // 删除按钮修改
     const deleteBtn = document.getElementById('delete');
-    deleteBtn.addEventListener('click', () => {
-      const lastChar = expressionInput.value.slice(-1);
-      expressionInput.value = expressionInput.value.slice(0, -1);
 
-      if (!isNaN(parseInt(lastChar))) {
-        const lastUsedButton = Array.from(numberButtons.children).find(btn => btn.textContent === lastChar && btn.used === true);
-        if (lastUsedButton) {
-          lastUsedButton.used = false;
-          lastUsedButton.disabled = false;
+    deleteBtn.addEventListener('click', () => {
+      const lastItem = expressionDiv.lastElementChild;
+      if (lastItem) {
+        const lastChar = lastItem.textContent;
+        expressionDiv.removeChild(lastItem);
+        expressionArray.pop(); // 从 expressionArray 中删除最后一个元素
+
+        if (!isNaN(parseInt(lastChar))) {
+          const lastUsedButton = Array.from(numberButtons.children).find(btn => btn.textContent === lastChar && btn.used === true);
+          if (lastUsedButton) {
+            lastUsedButton.used = false;
+            lastUsedButton.disabled = false;
+          }
         }
+        submitBtn.disabled = !isExpressionValid();
       }
-      submitBtn.disabled = expressionInput.value.trim() === '';
     });
+
+
 
     // 添加一个无解按钮
       const noSolutionBtn = document.getElementById('no-solution-btn');
@@ -360,14 +403,42 @@
         const numbers = Array.from(cards, card => parseInt(card.textContent));
         const result = findSolution(numbers);
         if (!result) {
-          resultDiv.innerHTML = '<span style="color:green">恭喜，本题无解！</span>';
+          stopTimer();
+          resultDiv.innerHTML = '<span style="color:green">恭喜，本题确实无解！</span>';
+          wonGames.textContent = parseInt(wonGames.textContent) + 1;
           setTimeout(() => {
             initCards();
           }, 1500); // 延迟 1500 毫秒（1.5 秒）刷新题目
         } else {
           resultDiv.innerHTML = '<span style="color:red">本题有解，请继续尝试。</span>';
         }
+        expressionDiv.innerHTML = ''; // 清空计算式
+        expressionArray.length = 0; // 清空 expressionArray
       });
+
+      let timer;
+      let timeLeft;
+
+      function startTimer() {
+        timeLeft = 60;
+        document.getElementById('time-left').textContent = timeLeft;
+
+        timer = setInterval(() => {
+          timeLeft -= 1;
+          document.getElementById('time-left').textContent = timeLeft;
+
+          if (timeLeft <= 0) {
+            clearInterval(timer);
+            resultDiv.innerHTML = '<span style="color:red">抱歉，时间已到。</span>';
+            submitBtn.disabled = true;
+            resetNumberButtons();
+          }
+        }, 1000);
+      }
+
+      function stopTimer() {
+        clearInterval(timer);
+      }
 
     // 初始化游戏
     initCards();
